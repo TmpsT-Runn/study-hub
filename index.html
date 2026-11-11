@@ -436,7 +436,6 @@ footer{padding:24px 16px;text-align:center;font-size:.75rem;color:var(--fg3)}
   </div>
 </section>
 </main>
-
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 <script>
@@ -651,8 +650,12 @@ const Gen=(function(){
   const SEP=/^[|\s:-]+$/;
   function fromNotes(text){
     const lines=String(text||'').replace(/\r\n?/g,'\n').split('\n');const out=[],seen={};let fence=false,heading='',loose=[];
-    const add=(q,a)=>{q=q.trim();a=a.trim();if(!q||!a||a.length<2)return false;const k=q.toLowerCase();if(seen[k])return false;seen[k]=1;out.push({q,a});return true};
-    const flush=()=>{if(loose.length>=2&&heading)add('Key points: '+heading,loose.join('; '));loose=[]};
+    const nz=x=>String(x||'').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu,'').replace(/\s+/g,' ').trim();
+    const heads={};{let f=false;lines.forEach(l=>{if(/^\s*(```|~~~)/.test(l)){f=!f;return}if(f)return;const m=l.match(/^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$/);if(m)heads[nz(MD.plain(m[1]))]=1})}
+    /* a term is valid if it is not a whole heading and has at least 3 letters/digits */
+    const termOk=t=>{const n=nz(t);return n.replace(/\s/g,'').length>=3&&!heads[n]};
+    const add=(q,a,term)=>{q=q.trim();a=a.trim();if(!q||!a||a.length<2)return false;if(term!==undefined&&!termOk(term))return false;const k=q.toLowerCase();if(seen[k])return false;seen[k]=1;out.push({q,a});return true};
+    const flush=()=>{loose=[]};
     for(let i=0;i<lines.length&&out.length<80;i++){
       const raw=lines[i];
       if(/^\s*(```|~~~)/.test(raw)){fence=!fence;continue}
@@ -661,18 +664,18 @@ const Gen=(function(){
       if(h){flush();heading=MD.plain(h[1]);continue}
       if(raw.indexOf('|')>=0){const nx=lines[i+1]||'';
         if(SEP.test(raw)||(/^\s*\|?\s*:?-{2,}/.test(nx)&&nx.indexOf('|')>=0))continue;
-        const c=raw.trim().replace(/^\||\|$/g,'').split('|').map(x=>MD.plain(x));if(c.length===2){add(c[0]+'?',c[1])}continue}
+        const c=raw.trim().replace(/^\||\|$/g,'').split('|').map(x=>MD.plain(x));if(c.length===2){add(c[0]+'?',c[1],c[0])}continue}
       if(/^\s*(?:[-*+]|\d+[.)])\s+\[[ xX]\]/.test(raw)||/^\s*---+\s*$/.test(raw))continue;
       const bullet=/^\s*(?:[-*+]|\d+[.)])\s+/.test(raw);
       const clean=raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/,'').replace(/^\s*>\s?/,'').trim();
       const flat=MD.plain(clean);let got=false;
       const d=flat.match(/^([^:—–]{2,60}?)\s*(?::\s|\s[—–-]\s)\s*(.{6,})$/);
-      if(d&&d[1].split(/\s+/).length<=8&&!/^https?/i.test(d[1])){const t=d[1].trim();got=add((t.split(/\s+/).length<=3?'Define: ':'Explain: ')+t,cap(d[2]))}
+      if(d&&d[1].split(/\s+/).length<=8&&!/^https?/i.test(d[1])){const t=d[1].trim();got=add((t.split(/\s+/).length<=3?'Define: ':'Explain: ')+t,cap(d[2]),t)}
       if(!got){const sents=flat.split(/(?<=[.!?])\s+/);
         for(const s of sents){const m=s.match(/^([A-Z][^.,:;]{2,50}?)\s+(is|are|was|were|means|refers to)\s+(.{8,}?)[.!?]?$/);
           if(m){const v=m[2];let q;if(v==='means')q='What does '+m[1]+' mean?';else if(v==='refers to')q='What does '+m[1]+' refer to?';else q='What '+v+' '+m[1]+'?';
-            if(add(q,cap(m[3]))){got=true}}}}
-      if(!got){const b=clean.match(/\*\*(.+?)\*\*/);if(b&&b[1].length<40){const q=MD.plain(clean.replace(b[0],'_____'));if(q.length>12)got=add('Fill in the blank: '+q,b[1])}}
+            if(nz(m[1]).replace(/\s/g,'').length>=3&&add(q,cap(m[3]))){got=true}}}}
+      if(!got){const b=clean.match(/\*\*(.+?)\*\*/);if(b&&b[1].length<40){const q=MD.plain(clean.replace(b[0],'_____'));if(q.length>12)got=add('Fill in the blank: '+q,b[1],b[1])}}
       if(!got&&bullet){const t=flat;if(t.length>3&&t.length<140)loose.push(t)}
     }
     flush();return out}

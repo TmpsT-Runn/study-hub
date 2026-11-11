@@ -1,5 +1,5 @@
 // Study Hub service worker: offline support.
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CORE = `study-hub-core-${VERSION}`;
 const RUNTIME = `study-hub-runtime-${VERSION}`;
 const CORE_FILES = ['./', './index.html', './manifest.webmanifest',
