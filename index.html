@@ -427,9 +427,6 @@ footer{padding:24px 16px;text-align:center;font-size:.75rem;color:var(--fg3)}
       <p class="muted">To become an installable app, this page would need to be hosted at a secure (https) address with a web app manifest (name, icons, colors) and a service worker for offline use. After that, supporting browsers offer “Install” on desktop (Chrome/Edge) or “Add to Home Screen” on phones (Safari on iPhone, Chrome on Android). The layout is already responsive and touch-friendly to prepare for this.</p></details>
     <details class="dt"><summary>Syncing across devices (later)</summary>
       <p class="muted">Sync needs user accounts (sign-in), a server and database to hold each person’s decks, and rules for resolving edits made on two devices. The code keeps all saving behind one storage interface (load, save, clear) so a server-backed version can replace the browser one without rewriting the rest of the app. Until then, use JSON backups to move data by hand.</p></details>
-    <details class="dt"><summary>AI-generated cards (later)</summary>
-      <p class="muted">Today cards come from simple built-in rules. AI-written cards would need sign-in and a server that calls an AI model on your behalf, because keys and usage limits cannot be kept safely in a web page. Your notes would be sent to that server, so a privacy notice and consent would be required.</p></details>
-  </div>
 </section>
 </main>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
